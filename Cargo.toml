@@ -9,6 +9,11 @@ exclude = [
     "projects/.DS_Store",
 ]
 
+
+[profile.dev]
+opt-level = 1
+incremental = true
+
 [profile.release]
 lto = true
 panic = "abort"

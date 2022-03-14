@@ -15,11 +15,11 @@ mod hook;
 
 pub fn Editor(cx: Scope) -> Element {
     let text = use_state(&cx, || String::from(include_str!("placeholder.html")));
-    let tw = use_tailwind(&cx);
+    let tw = use_tailwind_default(&cx);
     let is_minify = tw.MinifyToggle();
-    let is_obfuscate = ObfuscateToggle(tw);
-    let is_preflight = PreflightToggle(tw);
-    let which_mode = ModeSelect(tw);
+    let is_obfuscate = tw.ObfuscateToggle();
+    let is_preflight = tw.PreflightToggle();
+    let which_mode = tw.ModeSelect();
     let report = GithubIssue("https://github.com/oovm/tailwind-rs/issues");
     let (html, css) = tw.compile(text);
     cx.render(rsx!(

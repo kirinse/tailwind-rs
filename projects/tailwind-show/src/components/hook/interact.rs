@@ -54,38 +54,62 @@ impl UseTailwind {
         )
     }
 
-    fn PreflightToggle(tw: &UseTailwind) -> LazyNodes {
-        let v = tw.get_preflight();
+    pub fn PreflightToggle(&self) -> LazyNodes {
+        let value = self.get_preflight();
+        let label = "Preflight";
+        let click = move |e: FormEvent| {
+            let new = match e.value.parse::<bool>() {
+                Ok(o) => o,
+                Err(_) => return,
+            };
+            self.set_preflight(new);
+        };
         rsx!(
             label {
                 class: "cursor-pointer label",
                 span {
                     class: "label-text",
-                    "Preflight"
+                    "{label}"
                 }
                 input {
                     r#type: "checkbox",
                     class: "toggle",
-                    checked: "{v}",
-                    oninput: move |e| tw.set_preflight(e)
+                    checked: "{value}",
+                    oninput: click
                 }
             }
         )
     }
-
-    fn ModeSelect(tw: &UseTailwind) -> LazyNodes {
-        let v = tw.get_mode();
+    pub fn ModeSelect(&self) -> LazyNodes {
+        let value = match self.get_mode() {
+            CssInlineMode::None => "m",
+            CssInlineMode::Inline => "i",
+            CssInlineMode::Scoped => "s",
+            CssInlineMode::DataKey => "k",
+            CssInlineMode::DataValue => "v",
+        };
+        let label = "Compile Mode";
+        let click = move |e: FormEvent| {
+            let new = match e.value.as_str() {
+                "i" => CssInlineMode::Inline,
+                "s" => CssInlineMode::Scoped,
+                "k" => CssInlineMode::DataKey,
+                "v" => CssInlineMode::DataValue,
+                _ => CssInlineMode::None,
+            };
+            self.set_mode(new);
+        };
         rsx!(
             label {
                 class: "cursor-pointer label",
                 span {
                     class: "label-text",
-                    "Compile Mode"
+                    "{label}"
                 }
                 select {
                     class: "select select-primary w-full max-w-xs",
-                    value: "{v}",
-                    onchange: move |e| tw.set_mode(e),
+                    value: "{value}",
+                    onchange: click,
                     option {
                         value: "m",
                         "Normal"
@@ -112,9 +136,10 @@ impl UseTailwind {
     }
 
     pub fn compile(&self, input: &str) -> (LazyNodes, LazyNodes) {
-        let mut config = self.state.borrow_mut();
-        config.clear();
-        match config.compile_html(input) {
+        let config = self.config.borrow_mut();
+        let mut builder = self.state.borrow_mut();
+        builder.clear();
+        match config.compile_html(input, &mut builder) {
             Ok((a, b)) => (
                 rsx! {
                     CodeRenderer {
